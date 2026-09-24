@@ -65,10 +65,24 @@ body {
 .cat-Medical { background: #8a6f32; }
 .cat-Cardiac { background: #101820; color: var(--accent); }
 .cat-Trauma { background: #6f4f2a; }
-.cat-Pediatric { background: #4f6347; }
-.cat-HAZMAT { background: #574978; }
-.cat-Advanced { background: #3f6665; }
-.cat-Medications { background: #574978; }
+.cat-Pediatric {
+  background: #d3bc8d; /* light gold */
+  color: #101820;
+}
+.cat-HAZMAT {
+  background: #101820; /* black */
+  color: #ffffff;
+  border: 1px solid #d3bc8d;
+}
+.cat-Advanced {
+  background: #b49a62; /* dark gold */
+  color: #101820;
+}
+.cat-Medications {
+  background: #ffffff; /* white */
+  color: #101820;
+  border: 1px solid #101820;
+}
 .protocol-name { flex: 1; font-weight: 500; }
 .chevron { color: var(--accent-dark); font-size: 1.1rem; }
 .no-results { text-align: center; color: var(--text-muted); padding: 2rem 1rem; display: none; }
