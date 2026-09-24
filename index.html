@@ -342,10 +342,10 @@ body {
   var currentCategory = "all";
   var currentSearch = "";
 
- function pageToFilename(page) {
+function pageToFilename(page) {
   var s = String(page);
   while (s.length < 3) s = "0" + s;
-  return "./page-" + s + ".png";
+  return "https://raw.githubusercontent.com/kingtree923/ROPE_v3/main/page-" + s + ".png";
 }
 
   function escapeHtml(str) {
