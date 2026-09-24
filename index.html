@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="theme-color" content="#1a365d">
+  <title>ROPE 2024 Protocol Viewer</title>
+  <style>
+:root {
+  --primary: #1a365d;
+  --primary-light: #2b4a7c;
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --text: #1a202c;
+  --text-muted: #718096;
+  --border: #e2e8f0;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 1rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.subtitle { font-size: 0.8rem; opacity: 0.9; margin-top: 0.15rem; }
+.main {
+  flex: 1;
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+.search-container { position: relative; margin-bottom: 1rem; }
+#search-input {
+  width: 100%;
+  padding: 0.85rem 2.5rem 0.85rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+#search-input:focus { border-color: var(--primary); }
+.clear-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  display: none;
+}
+.clear-btn.visible { display: block; }
+.category-tabs {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.category-tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 0.45rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.tab:active { transform: scale(0.97); }
+.protocol-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+.protocol-item {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.protocol-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text);
+  gap: 0.75rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.protocol-btn:active { background: #edf2f7; }
+.cat-badge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: white;
+  min-width: 4.2rem;
+  text-align: center;
+}
+.cat-Medical { background: #2b6cb0; }
+.cat-Cardiac { background: #c53030; }
+.cat-Trauma { background: #c05621; }
+.cat-Pediatric { background: #2f855a; }
+.cat-HAZMAT { background: #6b46c1; }
+.cat-Advanced { background: #2c7a7b; }
+.protocol-name { flex: 1; font-weight: 500; }
+.chevron { color: var(--text-muted); font-size: 1.1rem; }
+.no-results {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem 1rem;
+  display: none;
+}
+.no-results.show { display: block; }
+.detail-view { display: none; flex-direction: column; gap: 0.75rem; }
+.detail-view.show { display: flex; }
+.list-view.hide { display: none; }
+.detail-header { display: flex; align-items: center; gap: 0.75rem; }
+.back-btn {
+  flex-shrink: 0;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:active { opacity: 0.9; }
+#detail-title { font-size: 1.05rem; font-weight: 600; line-height: 1.3; }
+.image-container {
+  background: #1a202c;
+  border-radius: var(--radius);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 180px);
+  box-shadow: var(--shadow);
+  touch-action: pan-x pan-y pinch-zoom;
+}
+#protocol-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 100%;
+}
+.zoom-hint { text-align: center; font-size: 0.75rem; color: var(--text-muted); }
+.footer {
+  text-align: center;
+  padding: 1.25rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+.disclaimer { margin-top: 0.25rem; font-size: 0.7rem; opacity: 0.85; }
+@media (min-width: 640px) {
+  .header h1 { font-size: 1.75rem; }
+  .main { padding: 1.5rem; }
+  .protocol-btn { padding: 1rem 1.25rem; font-size: 1rem; }
+  .image-container { max-height: calc(100vh - 200px); }
+  #protocol-image { width: auto; max-width: 100%; margin: 0 auto; }
+}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>ROPE 2024</h1>
+    <p class="subtitle">Region One Protocol Effort Guidelines</p>
+  </header>
+
+  <main class="main">
+    <section id="list-view" class="list-view">
+      <div class="search-container">
+        <input type="search" id="search-input" placeholder="Search protocols..." autocomplete="off" enterkeyhint="search">
+        <button type="button" id="clear-search" class="clear-btn" aria-label="Clear search">&times;</button>
+      </div>
+
+      <div class="category-tabs" id="category-tabs">
+        <button type="button" class="tab active" data-cat="all">All</button>
+        <button type="button" class="tab" data-cat="Medical">Medical</button>
+        <button type="button" class="tab" data-cat="Cardiac">Cardiac</button>
+        <button type="button" class="tab" data-cat="Trauma">Trauma</button>
+        <button type="button" class="tab" data-cat="Pediatric">Pediatric</button>
+        <button type="button" class="tab" data-cat="HAZMAT">HAZMAT</button>
+        <button type="button" class="tab" data-cat="Advanced">Advanced</button>
+      </div>
+
+      <ul id="protocol-list" class="protocol-list"></ul>
+      <p id="no-results" class="no-results">No protocols match your search.</p>
+    </section>
+
+    <section id="detail-view" class="detail-view">
+      <div class="detail-header">
+        <button type="button" id="back-btn" class="back-btn">← Back</button>
+        <h2 id="detail-title"></h2>
+      </div>
+      <div class="image-container">
+        <img id="protocol-image" src="" alt="Protocol page">
+      </div>
+      <div class="zoom-hint">Pinch to zoom · Scroll to pan</div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>2024 R.O.P.E Guidelines · Greater New Orleans Area EMS</p>
+    <p class="disclaimer">For authorized EMS providers. Always follow current agency policy &amp; Medical Control.</p>
+  </footer>
+
+  <script>
+(function () {
+  "use strict";
+
+  var PROTOCOLS = [
+    { page: 50, title: "Routine Medical Care", category: "Medical" },
+    { page: 51, title: "Do Not Attempt Resuscitation (DNAR)", category: "Medical" },
+    { page: 52, title: "Nontraumatic Termination of Resuscitation", category: "Medical" },
+    { page: 53, title: "Upper Airway Obstruction – Foreign Body Aspiration", category: "Medical" },
+    { page: 54, title: "Airway Management (1 of 3)", category: "Medical" },
+    { page: 55, title: "Airway Management (2 of 3)", category: "Medical" },
+    { page: 56, title: "Airway Management (3 of 3)", category: "Medical" },
+    { page: 57, title: "Adult Universal Respiratory Distress", category: "Medical" },
+    { page: 58, title: "Anaphylaxis | Allergic Reaction", category: "Medical" },
+    { page: 59, title: "Wheezing / Bronchospasm", category: "Medical" },
+    { page: 60, title: "Shock", category: "Medical" },
+    { page: 61, title: "Sepsis – Suspected / Septic Shock", category: "Medical" },
+    { page: 62, title: "Altered Mental Status", category: "Medical" },
+    { page: 63, title: "Overdose | Acute Poisoning", category: "Medical" },
+    { page: 64, title: "Diabetic Emergency", category: "Medical" },
+    { page: 65, title: "Stroke", category: "Medical" },
+    { page: 66, title: "Seizure", category: "Medical" },
+    { page: 67, title: "Agitated / Combative Patient", category: "Medical" },
+    { page: 68, title: "Hyperactive Delirium with Severe Agitation", category: "Medical" },
+    { page: 69, title: "Non-Traumatic Abdominal Pain | Nausea & Vomiting", category: "Medical" },
+    { page: 70, title: "Drowning", category: "Medical" },
+    { page: 71, title: "Hyperthermia | Heat Exposure", category: "Medical" },
+    { page: 72, title: "Hypothermia | Cold Exposure", category: "Medical" },
+    { page: 73, title: "Hypothermia Induced Cardiac Arrest", category: "Medical" },
+    { page: 74, title: "Emergency Childbirth", category: "Medical" },
+    { page: 75, title: "Obstetric Complications", category: "Medical" },
+    { page: 76, title: "Medical Hypovolemia", category: "Medical" },
+    { page: 105, title: "BLS Cardiorespiratory Arrest", category: "Cardiac" },
+    { page: 106, title: "Cardiac Arrest", category: "Cardiac" },
+    { page: 107, title: "Post Resuscitation Care", category: "Cardiac" },
+    { page: 108, title: "Bradycardia", category: "Cardiac" },
+    { page: 109, title: "Tachycardia", category: "Cardiac" },
+    { page: 110, title: "Chest Pain – Suspected ACS", category: "Cardiac" },
+    { page: 111, title: "CHF | Acute Pulmonary Edema", category: "Cardiac" },
+    { page: 112, title: "Ventricular Assist Devices (VADs)", category: "Cardiac" },
+    { page: 130, title: "Trauma Center Triage Criteria", category: "Trauma" },
+    { page: 131, title: "Routine Trauma Care", category: "Trauma" },
+    { page: 132, title: "Hemorrhage Control", category: "Trauma" },
+    { page: 133, title: "Traumatic Shock", category: "Trauma" },
+    { page: 134, title: "Traumatic Cardiac Arrest (TCA) | Withholding Resuscitation", category: "Trauma" },
+    { page: 135, title: "Traumatic Pain Management", category: "Trauma" },
+    { page: 136, title: "Head Injury", category: "Trauma" },
+    { page: 137, title: "Spinal Motion Restriction (SMR)", category: "Trauma" },
+    { page: 138, title: "Open Wound / Fracture / Dislocation", category: "Trauma" },
+    { page: 139, title: "Traumatic Rhabdomyolysis / Crush Injury", category: "Trauma" },
+    { page: 140, title: "Burn Care", category: "Trauma" },
+    { page: 141, title: "Burn Center Triage Criteria", category: "Trauma" },
+    { page: 142, title: "TASER Barb Injury", category: "Trauma" },
+    { page: 162, title: "Pediatric Cardiac Arrest", category: "Pediatric" },
+    { page: 163, title: "Pediatric Upper Airway Obstruction: Croup/Stridor", category: "Pediatric" },
+    { page: 164, title: "Pediatric Lower Airway: Wheezing (Bronchiolitis)", category: "Pediatric" },
+    { page: 165, title: "Pediatric Lower Airway: Asthma/Wheezing > 2 yo", category: "Pediatric" },
+    { page: 166, title: "Pediatric Anaphylaxis / Allergic Reaction", category: "Pediatric" },
+    { page: 167, title: "Pediatric Tachycardia", category: "Pediatric" },
+    { page: 168, title: "Pediatric Bradycardia", category: "Pediatric" },
+    { page: 169, title: "Pediatric Shock", category: "Pediatric" },
+    { page: 170, title: "Pediatric Altered Mental Status", category: "Pediatric" },
+    { page: 171, title: "Pediatric Seizure", category: "Pediatric" },
+    { page: 172, title: "Pediatric Sepsis – Suspected / Septic Shock", category: "Pediatric" },
+    { page: 173, title: "Pediatric Nausea / Vomiting & Dehydration", category: "Pediatric" },
+    { page: 174, title: "Pediatric Traumatic Pain Management", category: "Pediatric" },
+    { page: 175, title: "Neonatal Resuscitation", category: "Pediatric" },
+    { page: 193, title: "Routine Hazmat Care", category: "HAZMAT" },
+    { page: 194, title: "Carbon Monoxide (CO) Exposure", category: "HAZMAT" },
+    { page: 195, title: "Cyanide (HCN) Exposure", category: "HAZMAT" },
+    { page: 196, title: "Nerve Agent | Organophosphate Poisoning", category: "HAZMAT" },
+    { page: 197, title: "Hydrofluoric (HF) Acid Exposure", category: "HAZMAT" },
+    { page: 198, title: "Irritant Gas | Simple Asphyxiant Exposure", category: "HAZMAT" },
+    { page: 199, title: "Radiation Exposure", category: "HAZMAT" },
+    { page: 203, title: "Cricothyrotomy", category: "Advanced" },
+    { page: 204, title: "Delayed & Rapid Sequence Intubation", category: "Advanced" },
+    { page: 205, title: "Opioid Withdrawal | Buprenorphine Administration", category: "Advanced" }
+  ];
+
+  var listView = document.getElementById("list-view");
+  var detailView = document.getElementById("detail-view");
+  var protocolList = document.getElementById("protocol-list");
+  var searchInput = document.getElementById("search-input");
+  var clearSearch = document.getElementById("clear-search");
+  var noResults = document.getElementById("no-results");
+  var detailTitle = document.getElementById("detail-title");
+  var protocolImage = document.getElementById("protocol-image");
+  var backBtn = document.getElementById("back-btn");
+  var categoryTabs = document.getElementById("category-tabs");
+
+  var currentCategory = "all";
+  var currentSearch = "";
+
+  function pageToFilename(page) {
+    var s = String(page);
+    while (s.length < 3) s = "0" + s;
+    return "images/page-" + s + ".png";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function renderList() {
+    var q = currentSearch.toLowerCase().trim();
+    var filtered = [];
+    for (var i = 0; i < PROTOCOLS.length; i++) {
+      var p = PROTOCOLS[i];
+      var matchesCat = currentCategory === "all" || p.category === currentCategory;
+      var matchesSearch = !q ||
+        p.title.toLowerCase().indexOf(q) !== -1 ||
+        p.category.toLowerCase().indexOf(q) !== -1 ||
+        String(p.page).indexOf(q) !== -1;
+      if (matchesCat && matchesSearch) filtered.push(p);
+    }
+
+    var html = "";
+    for (var j = 0; j < filtered.length; j++) {
+      var item = filtered[j];
+      html += '<li class="protocol-item">' +
+        '<button type="button" class="protocol-btn" data-page="' + item.page + '" data-title="' + escapeHtml(item.title) + '">' +
+        '<span class="cat-badge cat-' + item.category + '">' + item.category + '</span>' +
+        '<span class="protocol-name">' + escapeHtml(item.title) + '</span>' +
+        '<span class="chevron">›</span>' +
+        '</button></li>';
+    }
+    protocolList.innerHTML = html;
+    noResults.className = filtered.length === 0 ? "no-results show" : "no-results";
+  }
+
+  function showDetail(page, title) {
+    detailTitle.textContent = title;
+    protocolImage.src = pageToFilename(page);
+    protocolImage.alt = title;
+    listView.classList.add("hide");
+    detailView.classList.add("show");
+    window.scrollTo(0, 0);
+    try {
+      history.pushState({ page: page, title: title }, title, "#" + page);
+    } catch (e) {}
+  }
+
+  function showList() {
+    detailView.classList.remove("show");
+    listView.classList.remove("hide");
+    try {
+      history.pushState(null, "", location.pathname + location.search);
+    } catch (e) {}
+  }
+
+  // Protocol list clicks (event delegation)
+  protocolList.addEventListener("click", function (e) {
+    var btn = null;
+    if (e.target.closest) {
+      btn = e.target.closest(".protocol-btn");
+    } else {
+      var el = e.target;
+      while (el && el !== protocolList) {
+        if (el.classList && el.classList.contains("protocol-btn")) { btn = el; break; }
+        el = el.parentNode;
+      }
+    }
+    if (!btn) return;
+    var page = parseInt(btn.getAttribute("data-page"), 10);
+    var title = btn.getAttribute("data-title");
+    showDetail(page, title);
+  });
+
+  backBtn.addEventListener("click", function () {
+    showList();
+  });
+
+  // Search - multiple events for mobile compatibility
+  function onSearch() {
+    currentSearch = searchInput.value;
+    if (currentSearch) {
+      clearSearch.classList.add("visible");
+    } else {
+      clearSearch.classList.remove("visible");
+    }
+    renderList();
+  }
+  searchInput.addEventListener("input", onSearch);
+  searchInput.addEventListener("keyup", onSearch);
+  searchInput.addEventListener("change", onSearch);
+  searchInput.addEventListener("search", onSearch);
+
+  clearSearch.addEventListener("click", function () {
+    searchInput.value = "";
+    currentSearch = "";
+    clearSearch.classList.remove("visible");
+    renderList();
+    searchInput.focus();
+  });
+
+  // Category tabs
+  categoryTabs.addEventListener("click", function (e) {
+    var tab = null;
+    if (e.target.closest) {
+      tab = e.target.closest(".tab");
+    } else {
+      var el = e.target;
+      while (el && el !== categoryTabs) {
+        if (el.classList && el.classList.contains("tab")) { tab = el; break; }
+        el = el.parentNode;
+      }
+    }
+    if (!tab) return;
+
+    var tabs = categoryTabs.querySelectorAll(".tab");
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.remove("active");
+    }
+    tab.classList.add("active");
+    currentCategory = tab.getAttribute("data-cat") || "all";
+    renderList();
+  });
+
+  // Browser back / hash support
+  window.addEventListener("popstate", function (e) {
+    if (e.state && e.state.page) {
+      showDetail(e.state.page, e.state.title);
+    } else {
+      showList();
+    }
+  });
+
+  function checkHash() {
+    var hash = (location.hash || "").replace("#", "");
+    if (hash) {
+      var page = parseInt(hash, 10);
+      for (var i = 0; i < PROTOCOLS.length; i++) {
+        if (PROTOCOLS[i].page === page) {
+          showDetail(PROTOCOLS[i].page, PROTOCOLS[i].title);
+          return;
+        }
+      }
+    }
+    showList();
+  }
+
+  // Start
+  renderList();
+  checkHash();
+})();
+  </script>
+</body>
+</html>
