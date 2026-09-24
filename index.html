@@ -342,11 +342,11 @@ body {
   var currentCategory = "all";
   var currentSearch = "";
 
-  function pageToFilename(page) {
-    var s = String(page);
-    while (s.length < 3) s = "0" + s;
-    return "page-" + s + ".png";
-  }
+ function pageToFilename(page) {
+  var s = String(page);
+  while (s.length < 3) s = "0" + s;
+  return "./page-" + s + ".png";
+}
 
   function escapeHtml(str) {
     return String(str)
